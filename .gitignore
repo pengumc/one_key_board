@@ -216,3 +216,6 @@ pip-log.txt
 
 #don't include v-usb files
 usbdrv
+*.o
+*.hex
+*.elf

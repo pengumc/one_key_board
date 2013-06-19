@@ -11,7 +11,7 @@ NAME = one_key_board
 
 #for the love of god, keep the linking order!
 OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o $(NAME).o
-CFLAGS = -DF_CPU=$(F_CPU) -std=c99 -Wall -Os -mmcu=$(MMCU) -I. -Iusbdrv
+CFLAGS = -DF_CPU=$(F_CPU) -std=c99 -Wall -Os -mmcu=$(MMCU) -I. -I./usbdrv
 CC = avr-gcc
 SIZE = avr-size
 OBJCOPY = avr-objcopy

@@ -13,6 +13,11 @@
 #include "usbdrv.h"
 #include "oddebug.h"
 
+#define SET(x,y) (x|=(1<<y))
+#define CLR(x,y) (x&=(~(1<<y)))
+#define CHK(x,y) (x&(1<<y)) 
+#define TOG(x,y) (x^=(1<<y))
+
 static uchar    reportBuffer[2];    /* buffer for HID reports */
 static uchar    idleRate;           /* in 4 ms units */
 
@@ -50,6 +55,8 @@ const PROGMEM char usbHidReportDescriptor[35] = {   /* USB report descriptor */
  
  uchar	usbFunctionSetup(uchar data[8]){
     usbRequest_t    *rq = (void *)data;
+    TOG(PORTB, PB0);
+
     usbMsgPtr = reportBuffer;
     if((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_CLASS){    /* class request type */
         if(rq->bRequest == USBRQ_HID_GET_REPORT){  /* wValue: ReportType (highbyte), ReportID (lowbyte) */
@@ -68,7 +75,42 @@ const PROGMEM char usbHidReportDescriptor[35] = {   /* USB report descriptor */
 }
 
 
-
+uchar keydown = 0;
+uchar prev = 0;
+uchar changed = 0;
 int main(){
-
+    usbInit();
+    sei();
+    reportBuffer[0] = 0x00;//(1<<1);
+    reportBuffer[1] = 0x00;//(1<<1);
+    CLR(DDRB, PB0);
+    SET(DDRD, PD7);
+        
+    
+    while(1){
+        usbPoll();
+        if(CHK(PINB, PB0) && changed == 0){
+            keydown = 1;
+            if (prev == keydown) changed = 0;
+            else changed = 1;
+            prev = 1;
+        }else{
+            keydown = 0;
+            if (prev == keydown) changed =0;
+            else changed = 1;
+            prev = 0;
+        }
+        if(changed){
+            if(keydown){
+                reportBuffer[1] = 0x04;
+            }else{
+                reportBuffer[1] = 0x00;
+            }
+            changed = 0;
+            reportBuffer[0] = 0x00;
+            usbSetInterrupt(reportBuffer, sizeof(reportBuffer));
+            TOG(PORTD, PD7);
+        }
+        
+    }
 }
